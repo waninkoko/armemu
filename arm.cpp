@@ -388,6 +388,33 @@ void ARM::Parse(void)
 		return;
 	}
 
+	if (((opcode >> 22) & 0x3F) == 0 &&
+	    ((opcode >>  4) & 0x0F) == 9) {
+		printf("%s", (W) ? "mla" : "mul");
+		CondPrint(opcode);
+		SuffPrint(opcode);
+
+		printf(" r%d, r%d, r%d", Rn, Rm, Rs);
+		if (W)
+			printf(", r%d", Rd);
+		printf("\n");
+
+		if (!CondCheck(opcode))
+			return;
+
+		if (W)
+			r[Rn] = (r[Rm] * r[Rs]) & 0xFFFFFFFF;
+		else
+			r[Rn] = (r[Rm] * r[Rs] + r[Rd]) & 0xFFFFFFFF;
+
+		if (S) {
+			cpsr.z = r[Rn] == 0;
+			cpsr.n = r[Rn] >> 31;
+		}
+
+		return;
+	}
+
 	switch ((opcode >> 26) & 0x3) {
 	case 0: {
 		switch ((opcode >> 21) & 0xF) {
