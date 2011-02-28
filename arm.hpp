@@ -77,9 +77,13 @@ class ARM {
 	vector<u32> breakpoint;
 
 private:
-	/* Check/Print functions */
+	/* Condition functions */
 	bool CondCheck (u32 opcode);
+	bool CondCheck (u16 opcode);
 	void CondPrint (u32 opcode);
+	void CondPrint (u16 opcode);
+
+	/* Print functions */
 	void SuffPrint (u32 opcode);
 	void ShiftPrint(u32 opcode);
 

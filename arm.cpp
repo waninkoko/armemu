@@ -86,10 +86,84 @@ bool ARM::CondCheck(u32 opcode)
 	return false;
 }
 
+bool ARM::CondCheck(u16 opcode)
+{
+	/* Check condition */
+	switch((opcode >> 8) & 0xF) {
+	case EQ:
+		return cpsr.z;
+	case NE:
+		return !cpsr.z;
+	case CS:
+		return cpsr.c;
+	case CC:
+		return !cpsr.c;
+	case MI:
+		return cpsr.n;
+	case PL:
+		return !cpsr.n;
+	case VS:
+		return cpsr.v;
+	case VC:
+		return !cpsr.v;
+	case HI:
+		return (cpsr.c && !cpsr.z);
+	case LS:
+		return (!cpsr.c || cpsr.z);
+	case GE:
+		return (cpsr.n == cpsr.v);
+	case LT:
+		return (cpsr.n != cpsr.v);
+	case GT:
+		return (cpsr.n == cpsr.v && !cpsr.z);
+	case LE:
+		return (cpsr.n != cpsr.v || cpsr.z);
+	case AL:
+		return true;
+	}
+
+	return false;
+}
+
 void ARM::CondPrint(u32 opcode)
 {
 	/* Check condition */
 	switch (opcode >> 28) {
+	case EQ:
+		printf("eq"); break;
+	case NE:
+		printf("ne"); break;
+	case CS:
+		printf("cs"); break;
+	case CC:
+		printf("cc"); break;
+	case MI:
+		printf("mi"); break;
+	case PL:
+		printf("pl"); break;
+	case VS:
+		printf("vs"); break;
+	case VC:
+		printf("vc"); break;
+	case HI:
+		printf("hi"); break;
+	case LS:
+		printf("ls"); break;
+	case GE:
+		printf("ge"); break;
+	case LT:
+		printf("lt"); break;
+	case GT:
+		printf("gt"); break;
+	case LE:
+		printf("le"); break;
+	}
+}
+
+void ARM::CondPrint(u16 opcode)
+{
+	/* Check condition */
+	switch ((opcode >> 8) & 0xF) {
 	case EQ:
 		printf("eq"); break;
 	case NE:
@@ -1662,148 +1736,14 @@ void ARM::ParseThumb(void)
 
 		Imm += 2;
 
-		switch ((opcode >> 8) & 0xF) {
-		case 0: {		// BEQ
-			printf("beq 0x%08X\n", *pc + Imm);
+		printf("b");
+		CondPrint(opcode);
+		printf(" 0x%08X\n", *pc + Imm);
 
-			if (cpsr.z)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 1: {		// BNE
-			printf("bne 0x%08X\n", *pc + Imm);
-
-			if (!cpsr.z)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 2: {		// BCS
-			printf("bcs 0x%08X\n", *pc + Imm);
-
-			if (cpsr.c)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 3: {		// BCC
-			printf("bcc 0x%08X\n", *pc + Imm);
-
-			if (!cpsr.c)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 4: {		// BMI
-			printf("bmi 0x%08X\n", *pc + Imm);
-
-			if (cpsr.n)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 5: {		// BPL
-			printf("bpl 0x%08X\n", *pc + Imm);
-
-			if (!cpsr.n)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 6: {		// BVS
-			printf("bvs 0x%08X\n", *pc + Imm);
-
-			if (cpsr.v)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 7: {		// BVC
-			printf("bvc 0x%08X\n", *pc + Imm);
-
-			if (!cpsr.v)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 8: {		// BHI
-			printf("bhi 0x%08X\n", *pc + Imm);
-
-			if (!cpsr.z && cpsr.c)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 9: {		// BLS
-			printf("bls 0x%08X\n", *pc + Imm);
-
-			if (cpsr.z || !cpsr.c)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 10: {		// BGE
-			printf("bge 0x%08X\n", *pc + Imm);
-
-			if (cpsr.n == cpsr.v)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 11: {		// BLT
-			printf("blt 0x%08X\n", *pc + Imm);
-
-			if (cpsr.n != cpsr.v)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 12: {		// BGT
-			printf("bgt 0x%08X\n", *pc + Imm);
-
-			if (!cpsr.z &&
-			     cpsr.n != cpsr.v)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 13: {		// BLE
-			printf("ble 0x%08X\n", *pc + Imm);
-
-			if (cpsr.z ||
-			    cpsr.n != cpsr.v)
-				*pc += Imm;
-
-			return;
-		}
-
-		case 14: {		// BAL
-			printf("bal 0x%08X\n", *pc + Imm);
-
+		if (CondCheck(opcode))
 			*pc += Imm;
 
-			return;
-		}
-
-		case 15: {		// SWI
-			printf("swi 0x%02X\n", Imm >> 1);
-			return;
-		}
-		}
+		return;
 	}
 
 	if ((opcode >> 11) == 28) {
