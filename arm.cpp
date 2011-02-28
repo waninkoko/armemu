@@ -1588,7 +1588,7 @@ void ARM::ParseThumb(void)
 			printf("ldr r%d, [sp, 0x%02X]\n", Rd, Imm << 2);
 		} else {
 			u32 addr  = *sp + (Imm << 2);
-			u16 value = r[Rd];
+			u32 value = r[Rd];
 
 			Memory::Write32(addr, value);
 
