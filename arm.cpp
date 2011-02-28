@@ -278,6 +278,7 @@ void ARM::Parse(void)
 	u32 Rm    = ((opcode >> 0) & 0xF);
 	u32 Rs    = ((opcode >> 8) & 0xF);
 	u32 Imm   = ((opcode >> 0) & 0xFF);
+	u32 amt   = Rs << 1;
 
 	/* Flags */
 	bool I = (opcode >> 25) & 1;
@@ -315,9 +316,6 @@ void ARM::Parse(void)
 
 	switch ((opcode >> 26) & 0x3) {
 	case 0: {
-		u32 amt = Rs << 1;
-		u32 result;
-
 		switch ((opcode >> 21) & 0xF) {
 		case 0: {		// AND
 			printf("and");
@@ -564,6 +562,8 @@ void ARM::Parse(void)
 
 		case 8: {		// TST/MRS
 			if (S) {
+				u32 result;
+
 				printf("tst");
 				CondPrint(opcode);
 
@@ -589,6 +589,8 @@ void ARM::Parse(void)
 
 		case 9: {		// TEQ/MSR
 			if (S) {
+				u32 result;
+
 				printf("teq");
 				CondPrint(opcode);
 
@@ -772,8 +774,7 @@ void ARM::Parse(void)
 	}
 
 	case 1: {
-		u32 amt = Rs << 1;
-		u32 result;
+		u32 value;
 
 		if (L) {		// LDR
 			u32 addy;
@@ -783,27 +784,36 @@ void ARM::Parse(void)
 			printf(" r%d,", Rd);
 
 			if (Rn == 15) {
-				Imm = opcode & 0xFFF;
+				Imm   = opcode & 0xFFF;
+				value = Memory::Read32(r[Rn] + Imm + sizeof(opcode));
 
-				result = Memory::Read32(r[Rn] + Imm + sizeof(opcode));
-				r[Rd]  = result;
+				printf(" =0x%08X\n", r[Rd]);
 
-				printf(" =0x%08X", result);
+				if (!CondCheck(opcode))
+					return;
+
+				r[Rd] = value;
 			} else {
 				printf(" [r%d", Rn);
 
 				if (I) {
-					result = Shift(opcode, r[Rm]);
-					printf(", %sr%d]", (U) ? "" : "-", Rm);
+					value = Shift(opcode, r[Rm]);
+
+					printf(", %sr%d", (U) ? "" : "-", Rm);
+					ShiftPrint(opcode);
 				} else {
-					result = ROR(Imm, amt);
-					printf(", #%s0x%08X]", (U) ? "" : "-", result);
+					value = ROR(Imm, amt);
+					printf(", #%s0x%08X", (U) ? "" : "-", value);
 				}
+				printf("]\n");
+
+				if (!CondCheck(opcode))
+					return;
 
 				if (U)
-					addy = r[Rn] + result;
+					addy = r[Rn] + value;
 				else
-					addy = r[Rn] - result;
+					addy = r[Rn] - value;
 
 				if (P && W)
 					r[Rn] = addy;
@@ -817,7 +827,6 @@ void ARM::Parse(void)
 					r[Rn] = addy;
 			}
 
-			printf("\n");
 			return;
 		} else {		// STR
 			u32 addy;
@@ -827,17 +836,23 @@ void ARM::Parse(void)
 			printf(" r%d, [r%d", Rd, Rn);
 
 			if (I) {
-				result = Shift(opcode, r[Rm]);
-				printf(", %sr%d]", (U) ? "" : "-", Rm);
+				value = Shift(opcode, r[Rm]);
+
+				printf(", %sr%d", (U) ? "" : "-", Rm);
+				ShiftPrint(opcode);
 			} else {
-				result = ROR(Imm, amt);
-				printf(", #%s0x%08X]", (U) ? "" : "-", result);
+				value = ROR(Imm, amt);
+				printf(", #%s0x%08X", (U) ? "" : "-", value);
 			}
+			printf("]\n");
+
+			if (!CondCheck(opcode))
+				return;
 
 			if (U)
-				addy = r[Rn] + result;
+				addy = r[Rn] + value;
 			else
-				addy = r[Rn] - result;
+				addy = r[Rn] - value;
 
 			if (P && W)
 				r[Rn] = addy;
@@ -850,7 +865,6 @@ void ARM::Parse(void)
 			if (!P && W)
 				r[Rn] = addy;
 
-			printf("\n");
 			return;
 		}
 	}
