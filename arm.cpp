@@ -1432,7 +1432,7 @@ void ARM::ParseThumb(void)
 
 		case 2: {		// MOV (NOP)
 			if (Rd == 8 && Rm == 8) {
-				printf("nop");
+				printf("nop\n");
 				return;
 			}
 
