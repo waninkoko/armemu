@@ -1071,7 +1071,7 @@ void ARM::ParseThumb(void)
 		case 0: {		// LSL
 			if (Imm > 0 && Imm <= 32) {
 				cpsr.c = r[Rd] & (1 << (32 - Imm));
-				r[Rd]  = LSR(r[Rd], Imm);
+				r[Rd]  = LSL(r[Rd], Imm);
 			}
 
 			if (Imm > 32) {
