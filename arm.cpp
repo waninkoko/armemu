@@ -949,45 +949,21 @@ void ARM::Parse(void)
 
 	switch ((opcode >> 25) & 7) {
 	case 4: {		// LDM/STM
-		u32 start, end;
-		u32 count = 0;
-
-		for (u32 i = 0; i < 16; i++) {
-			if ((opcode >> i) & 1)
-				count++;
-		}
-
-		switch ((opcode >> 22) & 7) {
-		case 0:
-			start = r[Rn] - (count << 2) + 4;
-			end   = start - (count << 2);
-			break;
-		case 2:
-			start = r[Rn];
-			end   = start + (count << 2);
-			break;
-		case 4:
-			start = r[Rn] - (count << 2);
-			end   = start;
-			break;
-		case 6:
-			start = r[Rn] + 4;
-			end   = start + (count << 2);
-			break;
-		}
+		u32  start = r[Rn];
+		bool pf    = false;
 
 		if (L) {
 			printf("ldm");
 			if (Rn == 13)
-				printf("%c%c", (P) ? 'e' : 'f', (I) ? 'd' : 'a');
+				printf("%c%c", (P) ? 'e' : 'f', (U) ? 'd' : 'a');
 			else
-				printf("%c%c", (I) ? 'i' : 'd', (P) ? 'b' : 'a');
+				printf("%c%c", (U) ? 'i' : 'd', (P) ? 'b' : 'a');
 		} else {
 			printf("stm");
 			if (Rn == 13)
-				printf("%c%c", (P) ? 'f' : 'e', (I) ? 'a' : 'd');
+				printf("%c%c", (P) ? 'f' : 'e', (U) ? 'a' : 'd');
 			else
-				printf("%c%c", (I) ? 'i' : 'd', (P) ? 'b' : 'a');
+				printf("%c%c", (U) ? 'i' : 'd', (P) ? 'b' : 'a');
 		}
 
 		if (Rn == 13)
@@ -998,24 +974,42 @@ void ARM::Parse(void)
 		if (W) printf("!");
 		printf(", {");
 
-		for (u32 i = 0; i < 16; i++) {
+		for (s32 i = 0; i < 16; i++) {
 			if ((opcode >> i) & 1) {
-				if (L) {
-					r[i]   = Memory::Read32(start);
-					start += sizeof(u32);
-				} else {
-					Memory::Write32(start, r[i]);
-					start += sizeof(u32);
-				}
+				if (pf) printf(", ");
+				printf("r%d", i);
 
-				printf("r%d,", i);
+				pf = true;
 			}
 		}
 
-		if (W)
-			r[Rn] = end;
+		printf("}");
+		if (B) {
+			printf("^");
+			if (opcode & (1 << 15))
+				cpsr.value = spsr;
+		}
+		printf("\n");
 
-		printf("}\n");
+		if (L) {
+			for (s32 i = 0; i < 16; i++) {
+				if ((opcode >> i) & 1) {
+					if (P)  start += (U) ? sizeof(u32) : -sizeof(u32);
+					r[i] = Memory::Read32(start);
+					if (!P) start += (U) ? sizeof(u32) : -sizeof(u32);
+				}
+			}
+		} else {
+			for (s32 i = 15; i >= 0; i--) {
+				if ((opcode >> i) & 1) {
+					if (P)  start += (U) ? sizeof(u32) : -sizeof(u32);
+					Memory::Write32(start, r[i]);
+					if (!P) start += (U) ? sizeof(u32) : -sizeof(u32);
+				}
+			}
+		}
+
+		if (W) r[Rn] = start;
 		return;
 	}
 
