@@ -777,7 +777,7 @@ void ARM::Parse(void)
 			if (I)
 				r[Rd] = ROR(Imm, amt);
 			else
-				r[Rd] = Shift(opcode, r[Rm]);
+				r[Rd] = (Rm == 15) ? (*pc + sizeof(opcode)) : Shift(opcode, r[Rm]);
 
 			if (S) {
 				cpsr.z = r[Rd] == 0;
