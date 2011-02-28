@@ -29,6 +29,10 @@ public:
 	/* File functions */
 	static char *FileRead (const char *filename, u32 &size);
 	static bool  FileWrite(const char *filename, const char *buffer, u32 size);
+
+	/* Conversion functions */
+	static s32 StrToInt(const char *str);
+	static s32 HexToInt(const char *str);
 };
 
 #endif /* __UTILS_H__ */

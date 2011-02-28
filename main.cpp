@@ -18,10 +18,10 @@
  */
 
 #include <iostream>
-#include <cstdlib>
 
 #include "arm.hpp"
 #include "memory.hpp"
+#include "utils.hpp"
 
 /* Constants */
 #define STACK_SIZE	(8 * 1024)	// 8KB stack
@@ -36,12 +36,12 @@ int main(int argc, char **argv)
 
 	/* Show usage */
 	if (argc < 4) {
-		cerr << "[USAGE]: " << argv[0] << " [b <binary file> | e <elf file>] <# of steps>" << endl;
+		cerr << "[USAGE]: " << argv[0] << " [b <binary file> | e <elf file>] <# of steps> (breakpoint)" << endl;
 		return 1;
 	}
 
 	/* Read arguments */
-	steps = atoi(argv[3]);
+	steps = Utils::StrToInt(argv[3]);
 
 	/* Check mode */
 	switch (argv[1][0]) {
@@ -68,6 +68,13 @@ int main(int argc, char **argv)
 	default:
 		cerr << "[ERROR]: Invalid option!" << endl;
 		return 1;
+	}
+
+	if (argc >= 4) {
+		s32 address = Utils::HexToInt(argv[4]);
+
+		/* Add breakpoint */
+		Cpu.BreakAdd(address);
 	}
 
 	/* Create stack */

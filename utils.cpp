@@ -18,6 +18,7 @@
  */
 
 #include <fstream>
+#include <sstream>
 
 #include "utils.hpp"
 
@@ -79,3 +80,30 @@ bool Utils::FileWrite(const char *filename, const char *buffer, u32 size)
 
 	return true;
 }
+
+s32 Utils::StrToInt(const char *str)
+{
+	stringstream ss;
+	s32 res;
+
+	/* Convert string to integer */
+	ss << str;
+	ss >> res;
+
+	/* Return integer */
+	return res;
+}
+
+s32 Utils::HexToInt(const char *str)
+{
+	stringstream ss;
+	s32 res;
+
+	/* Convert hex string to integer */
+	ss << hex << str;
+	ss >> res;
+
+	/* Return integer */
+	return res;	
+}
+
