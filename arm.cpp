@@ -392,9 +392,9 @@ void ARM::Parse(void)
 				return;
 
 			if (I)
-				result = r[Rn] - ROR(Imm, amt);
+				r[Rd] = r[Rn] - ROR(Imm, amt);
 			else
-				result = r[Rn] - Shift(opcode, r[Rm]);
+				r[Rd] = r[Rn] - Shift(opcode, r[Rm]);
 
 			if (S) {
 				cpsr.c = (I) ? (r[Rn] >= ROR(Imm, amt)) : (r[Rn] < r[Rd]);
