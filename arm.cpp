@@ -787,7 +787,7 @@ void ARM::Parse(void)
 				Imm   = opcode & 0xFFF;
 				value = Memory::Read32(r[Rn] + Imm + sizeof(opcode));
 
-				printf(" =0x%08X\n", r[Rd]);
+				printf(" =0x%08X\n", value);
 
 				if (!CondCheck(opcode))
 					return;
