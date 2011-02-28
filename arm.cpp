@@ -1025,9 +1025,9 @@ void ARM::Parse(void)
 		printf("b%s", (link) ? "l" : "");
 		CondPrint(opcode);
 
-		Imm = ((opcode & 0xFFFFFF) << 2) + sizeof(opcode);
-		if (Imm & (1 << 25))
-			Imm = ~(~Imm & 0xFFFFFF);
+		Imm = (opcode & 0xFFFFFF) << 2;
+		if (Imm & (1 << 25)) Imm = ~(~Imm & 0xFFFFFF);
+		Imm += sizeof(opcode);
 
 		printf(" 0x%08X\n", *pc + Imm);
 
