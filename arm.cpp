@@ -1666,11 +1666,6 @@ void ARM::ParseThumb(void)
 			bool pcf = opcode & 0x100;
 			bool pf  = false;
 
-			if (pcf) {
-				*pc    = Pop();
-				cpsr.t = *pc & 1;
-			}
-
 			printf("pop {");
 
 			for (s32 i = 0; i < 8; i++) {
@@ -1686,6 +1681,9 @@ void ARM::ParseThumb(void)
 			if (pcf) {
 				if (pf) printf(",");
 				printf("pc");
+
+				*pc    = Pop();
+				cpsr.t = *pc & 1;
 			}
 
 			printf("}\n");
