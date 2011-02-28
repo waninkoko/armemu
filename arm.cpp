@@ -403,9 +403,9 @@ void ARM::Parse(void)
 			return;
 
 		if (W)
-			r[Rn] = (r[Rm] * r[Rs]) & 0xFFFFFFFF;
-		else
 			r[Rn] = (r[Rm] * r[Rs] + r[Rd]) & 0xFFFFFFFF;
+		else
+			r[Rn] = (r[Rm] * r[Rs]) & 0xFFFFFFFF;
 
 		if (S) {
 			cpsr.z = r[Rn] == 0;
