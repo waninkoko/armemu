@@ -400,7 +400,7 @@ void ARM::Parse(void)
 				printf(" r%d, r%d, r%d", Rd, Rn, Rm);
 				ShiftPrint(opcode);
 			} else
-				printf(" r%d, r%d, 0x%X", Rd, Rn, ROR(Imm, amt));
+				printf(" r%d, r%d, #0x%X", Rd, Rn, ROR(Imm, amt));
 
 			printf("\n");
 
@@ -426,10 +426,12 @@ void ARM::Parse(void)
 			SuffPrint(opcode);
 
 			if (!I) {
-				printf(" r%d, r%d, r%d\n", Rd, Rn, Rm);
+				printf(" r%d, r%d, r%d", Rd, Rn, Rm);
 				ShiftPrint(opcode);
 			} else
-				printf(" r%d, r%d, 0x%X\n", Rd, Rn, ROR(Imm, amt));
+				printf(" r%d, r%d, #0x%X", Rd, Rn, ROR(Imm, amt));
+
+			printf("\n");
 
 			if (!CondCheck(opcode))
 				return;
