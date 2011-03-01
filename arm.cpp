@@ -748,11 +748,21 @@ void ARM::Parse(void)
 
 		case 11: {		// CMN/MSR2
 			if (S) {
-				printf("cmn r%d, r%d\n", Rd, Rm);
+				u32 value;
+
+				printf("cmn");
 				CondPrint(opcode);
 
+				if (I) {
+					value = ROR(Imm, amt);
+					printf(" r%d, 0x%08X\n", Rn, value);
+				} else {
+					value = r[Rm];
+					printf(" r%d, r%d\n", Rn, Rm);
+				}
+
 				if (CondCheck(opcode))
-					Addition(r[Rd], r[Rm]);
+					Addition(r[Rn], value);
 			} else
 				printf("msr2\n");
 
