@@ -43,8 +43,8 @@ ARM::ARM(void)
 	lr = (u32 *)(r + 14);
 	pc = (u32 *)(r + 15);
 
-	/* Unload */
-	Unload();
+	/* Reset */
+	Reset();
 }
 
 bool ARM::CondCheck(u32 opcode)
@@ -1820,125 +1820,7 @@ void ARM::ParseSvc(u8 num)
 	}
 }
 
-bool ARM::LoadBinary(const char *filename)
-{
-	char *buffer;
-	u32   size;
-
-	/* Read binary */
-	buffer = Utils::FileRead(filename, size);
-	if (!buffer)
-		return false;
-
-	/* Create virtual space */
-	Memory::Create(0, size);
-
-	/* Copy binary */
-	Memory::Memcpy(0, buffer, size);
-
-	/* Set PC */
-	*pc = 0;
-
-	/* Free buffer */
-	delete buffer;
-
-	return true;
-}
-
-bool ARM::LoadELF(const char *filename)
-{
-	Elf32_Ehdr  ehdr;
-	Elf32_Phdr *phdr;
-
-	ifstream File;
-
-	u32  entry, phoff;
-	u16  phnum, shnum;
-	bool ret;
-
-	/* Open file */
-	File.open(filename);
-
-	/* Check if open */
-	ret = File.is_open();
-	if (!ret)
-		return false;
-
-	/* Read ELF header */
-	File.read((char *)&ehdr, sizeof(ehdr));
-
-	/* Header parameters */
-	phnum = Swap16(ehdr.e_phnum);
-	phoff = Swap32(ehdr.e_phoff);
-	shnum = Swap16(ehdr.e_shnum);
-	entry = Swap32(ehdr.e_entry);
-
-	printf("Entry point: 0x%08X\n", entry);
-
-	/* Allocate array */
-	phdr = new Elf32_Phdr[phnum];
-	if (!phdr) {
-		ret = false;
-		goto out;
-	}
-
-	/* Read program headers */
-	File.seekg(phoff, ios::beg);
-	File.read ((char *)phdr, sizeof(*phdr) * phnum);
-
-	printf("\n");
-	printf("Program headers:\n");
-	printf("================\n");
-
-	for (u32 i = 0; i < phnum; i++) {
-		u32 filesz = Swap32(phdr[i].p_filesz);
-		u32 memsz  = Swap32(phdr[i].p_memsz);
-		u32 offset = Swap32(phdr[i].p_offset);
-		u32 paddr  = Swap32(phdr[i].p_paddr);
-		u32 vaddr  = Swap32(phdr[i].p_vaddr);
-		u32 flags  = Swap32(phdr[i].p_flags);
-
-		printf("[%d] off    0x%08X vaddr 0x%08X paddr 0x%08X\n", i, offset, vaddr, paddr);
-		printf("    filesz 0x%08X memsz 0x%08X flags %06X\n",   filesz, memsz, flags);
-
-		/* Create virtual space */
-		ret = Memory::Create(vaddr, memsz);
-		if (!ret)
-			goto out;
-
-		/* Read data from file */
-		if (filesz) {
-			/* Move to offset */
-			File.seekg(offset, ios::beg);
-
-			for(u32 j = 0; j < filesz; j += 4) {
-				u32 value;
-
-				/* Read word */
-				File.read((char *)&value, sizeof(value));
-
-				/* Write word */
-				Memory::Write32(vaddr + j, Swap32(value));
-			}
-		}
-	}
-
-	printf("\n");
-
-	/* Set PC */
-	*pc = entry;
-
-out:
-	/* Free array */
-	delete[] phdr;
-
-	/* Close file */
-	File.close();
-
-	return ret;
-}
-
-void ARM::Unload(void)
+void ARM::Reset(void)
 {
 	/* Reset registers */
 	memset(r, 0, sizeof(r));

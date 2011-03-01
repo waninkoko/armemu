@@ -50,7 +50,7 @@ public:
 	void Write16(u32 address, u16 value);
 	void Write32(u32 address, u32 value);
 
-	/* Memcpy functions */
+	/* Copy functions */
 	void Memcpy(u32 dst, void *src, u32 size);
 	void Memcpy(void *dst, u32 src, u32 size);
 };
@@ -69,6 +69,10 @@ public:
 	static void Destroy(void);
 	static void Destroy(u32 vaddr);
 
+	/* Load functions */
+	static bool LoadBinary(const char *filename, u32 &entry);
+	static bool LoadELF   (const char *filename, u32 &entry);
+
 	/* Read functions */
 	static u8  Read8 (u32 address);
 	static u16 Read16(u32 address);
@@ -79,7 +83,7 @@ public:
 	static void Write16(u32 address, u16 value);
 	static void Write32(u32 address, u32 value);
 
-	/* Memcpy functions */
+	/* Copy functions */
 	static void Memcpy(u32 dst, void *src, u32 size);
 	static void Memcpy(void *dst, u32 src, u32 size);
 };

@@ -112,18 +112,18 @@ private:
 public:
 	ARM(void);
 
-	/* Load functions */
-	bool LoadBinary(const char *filename);
-	bool LoadELF(const char *filename);
-	void Unload(void);
+	/* Reset function */
+	void Reset(void);
 
 	/* Execute functions */
 	bool Step(void);
 
-	/* Debug functions */
+	/* Breakpoint functions */
 	void BreakAdd (u32 address);
 	void BreakDel (u32 address);
 	bool BreakFind(u32 address);
+
+	/* Dump functions */
 	void DumpRegs(void);
 	void DumpStack(u32 count);
 
@@ -135,6 +135,10 @@ public:
 	inline void PokeReg(u8 idx, u32 val) {
 		r[idx] = val;
 	};
+
+	inline void SetPC(u32 val) {
+		*pc = val;
+	}
 };
 
 #endif /* _ARM9_HPP_ */

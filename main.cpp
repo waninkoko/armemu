@@ -31,6 +31,7 @@ int main(int argc, char **argv)
 {
 	ARM Cpu;
 
+	u32  entry;
 	s32  steps;
 	bool ret;
 
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
 	switch (argv[1][0]) {
 	case 'b':
 		/* Load binary */
-		ret = Cpu.LoadBinary(argv[2]);
+		ret = Memory::LoadBinary(argv[2], entry);
 		if (!ret) {
 			cerr << "[ERROR]: Could not load the binary file!" << endl;
 			return 1;
@@ -57,7 +58,7 @@ int main(int argc, char **argv)
 
 	case 'e':
 		/* Load ELF */
-		ret = Cpu.LoadELF(argv[2]);
+		ret = Memory::LoadELF(argv[2], entry);
 		if (!ret) {
 			cerr << "[ERROR]: Could not load the ELF file!" << endl;
 			return 1;
@@ -79,6 +80,9 @@ int main(int argc, char **argv)
 
 	/* Create stack */
 	Memory::Create(0xFFFFFFFF - STACK_SIZE, STACK_SIZE);
+
+	/* Set program counter */
+	Cpu.SetPC(entry);
 
 	/* Step CPU */
 	while (steps-- && Cpu.Step());
