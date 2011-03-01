@@ -91,5 +91,8 @@ int main(int argc, char **argv)
 	/* Dump stack */
 	Cpu.DumpStack(8);
 
+	/* Destroy virtual memory */
+	Memory::Destroy();
+
 	return 0;
 }

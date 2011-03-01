@@ -22,6 +22,7 @@
 #include <fstream>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 #include <elf.h>
 
 #include "arm.hpp"
@@ -382,9 +383,9 @@ void ARM::Parse(void)
 	}
 
 	if ((opcode >> 24) == 0xEF) {
-		u8 Imm = opcode & 0xFF;
+		u32 Imm = opcode & 0xFFFFFF;
 
-		printf("swi 0x%02X\n", Imm);
+		printf("swi 0x%X\n", Imm);
 		return;
 	}
 
@@ -883,23 +884,29 @@ void ARM::Parse(void)
 		CondPrint(opcode);
 		printf(" r%d,", Rd);
 
-		if (Rn == 15) {
+		if (L && Rn == 15) {
+			Imm   = (opcode & 0xFFF);
 			value = Memory::Read32(*pc + Imm + sizeof(opcode));
+
+			if (CondCheck(opcode))
+				r[Rd] = value;
+
 			printf(" =0x%X\n", value);
-		} else {
-			printf(" [r%d", Rn);
-
-			if (I) {
-				value = Shift(opcode, r[Rm]);
-
-				printf(", %sr%d", (U) ? "" : "-", Rm);
-				ShiftPrint(opcode);
-			} else {
-				value = ROR(Imm, amt);
-				printf(", #%s0x%08X", (U) ? "" : "-", value);
-			}
-			printf("]%s\n", (W) ? "!" : "");
+			return;
 		}
+
+		printf(" [r%d", Rn);
+
+		if (I) {
+			value = Shift(opcode, r[Rm]);
+
+			printf(", %sr%d", (U) ? "" : "-", Rm);
+			ShiftPrint(opcode);
+		} else {
+			value = ROR(Imm, amt);
+			printf(", #%s0x%08X", (U) ? "" : "-", value);
+		}
+		printf("]%s\n", (W) ? "!" : "");
 
 		if (!CondCheck(opcode))
 			return;

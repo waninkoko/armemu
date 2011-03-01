@@ -66,6 +66,7 @@ private:
 public:
 	/* Create/Destroy spaces */
 	static bool Create (u32 vaddr, u32 size);
+	static void Destroy(void);
 	static void Destroy(u32 vaddr);
 
 	/* Read functions */

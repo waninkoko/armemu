@@ -147,6 +147,11 @@ bool Memory::Create(u32 vaddr, u32 size)
 {
 	VSpace *Space;
 
+	/* Already exists */
+	Space = Find(vaddr);
+	if (Space)
+		return true;
+
 	/* Create virtual space */
 	Space = new VSpace(vaddr, size);
 	if (!Space)
@@ -156,6 +161,21 @@ bool Memory::Create(u32 vaddr, u32 size)
 	Spaces.push_back(Space);
 
 	return true;
+}
+
+void Memory::Destroy(void)
+{
+	/* Pop virtual spaces */
+	while (!Spaces.empty()) {
+		VSpace *space;
+
+		/* Pop virtual space */
+		space = Spaces.back();
+		Spaces.pop_back();
+
+		/* Delete it */
+		delete space;
+	}
 }
 
 void Memory::Destroy(u32 vaddr)
@@ -169,6 +189,8 @@ void Memory::Destroy(u32 vaddr)
 		/* Delete if found */
 		if (space->vaddr == vaddr) {
 			Spaces.erase(it);
+			delete space;
+
 			break;
 		}
 	}
