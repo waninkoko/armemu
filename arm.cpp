@@ -876,67 +876,26 @@ void ARM::Parse(void)
 		}
 	}
 
-	case 1: {
-		u32 value;
+	case 1: {		// LDR/STR
+		u32  addr, value, wb;
+		bool cond;
 
-		if (L) {		// LDR
-			u32 addy;
+		printf("%s%s", (L) ? "ldr" : "str", (B) ? "b" : "");
+		CondPrint(opcode);
+		printf(" r%d,", Rd);
 
-			printf("ldr%s", (B) ? "b" : "");
-			CondPrint(opcode);
-			printf(" r%d,", Rd);
+		cond = CondCheck(opcode);
 
-			if (Rn == 15) {
-				Imm   = opcode & 0xFFF;
-				value = Memory::Read32(r[Rn] + Imm + sizeof(opcode));
+		if (L && Rn == 15) {
+			Imm   = opcode & 0xFFF;
+			value = Memory::Read32(*pc + Imm + sizeof(opcode));
 
-				printf(" =0x%08X\n", value);
+			printf(" =0x%08X\n", value);
 
-				if (!CondCheck(opcode))
-					return;
-
+			if (cond)
 				r[Rd] = value;
-			} else {
-				printf(" [r%d", Rn);
-
-				if (I) {
-					value = Shift(opcode, r[Rm]);
-
-					printf(", %sr%d", (U) ? "" : "-", Rm);
-					ShiftPrint(opcode);
-				} else {
-					value = ROR(Imm, amt);
-					printf(", #%s0x%08X", (U) ? "" : "-", value);
-				}
-				printf("]\n");
-
-				if (!CondCheck(opcode))
-					return;
-
-				if (U)
-					addy = r[Rn] + value;
-				else
-					addy = r[Rn] - value;
-
-				if (P && W)
-					r[Rn] = addy;
-
-				if (B)
-					r[Rd] = Memory::Read8(r[Rn]);
-				else
-					r[Rd] = Memory::Read32(r[Rn]);
-
-				if (!P && W)
-					r[Rn] = addy;
-			}
-
-			return;
-		} else {		// STR
-			u32 addy;
-
-			printf("str%s", (B) ? "b" : "");
-			CondPrint(opcode);
-			printf(" r%d, [r%d", Rd, Rn);
+		} else {
+			printf(" [r%d", Rn);
 
 			if (I) {
 				value = Shift(opcode, r[Rm]);
@@ -947,29 +906,33 @@ void ARM::Parse(void)
 				value = ROR(Imm, amt);
 				printf(", #%s0x%08X", (U) ? "" : "-", value);
 			}
-			printf("]\n");
+			printf("]%s\n", (W) ? "!" : "");
 
-			if (!CondCheck(opcode))
+			if (!cond)
 				return;
 
-			if (U)
-				addy = r[Rn] + value;
-			else
-				addy = r[Rn] - value;
+			if (U) wb = r[Rn] + value;
+			else   wb = r[Rn] - value;
 
-			if (P && W)
-				r[Rn] = addy;
+			addr = (P) ? wb : r[Rn];
 
-			if (B)
-				Memory::Write8(r[Rn], r[Rd]);
-			else
-				Memory::Write32(r[Rn], r[Rd]);
+			if (L) {
+				if (B)
+					r[Rd] = Memory::Read8 (addr);
+				else
+					r[Rd] = Memory::Read32(addr);
+			} else {
+				if (B)
+					Memory::Write8 (addr, r[Rd]);
+				else
+					Memory::Write32(addr, r[Rd]);
+			}
 
-			if (!P && W)
-				r[Rn] = addy;
-
-			return;
+			if (W || !P)
+				r[Rn] = wb;
 		}
+
+		return;
 	}
 
 	default:

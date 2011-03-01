@@ -33,6 +33,10 @@ VSpace::VSpace(u32 address, u32 size)
 	/* Allocate buffer */
 	buffer = new u8[size];
 
+	/* Initialize buffer */
+	if (buffer)
+		memset(buffer, 0xFF, size);
+
 	/* Set parameters */
 	this->vaddr = address;
 	this->size  = size;
