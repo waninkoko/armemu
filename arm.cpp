@@ -19,15 +19,12 @@
  */
 
 #include <iostream>
-#include <fstream>
 #include <cstdio>
 #include <cstring>
-#include <elf.h>
 
 #include "arm.hpp"
 #include "endian.h"
 #include "memory.hpp"
-#include "utils.hpp"
 
 /* Shift/Rotate macros */
 #define LSL(x,y)	(x << y)
