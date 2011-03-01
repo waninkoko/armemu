@@ -76,6 +76,9 @@ class ARM {
 	/* Breakpoint list */
 	vector<u32> breakpoint;
 
+	/* Finish flag */
+	bool finished;
+
 private:
 	/* Condition functions */
 	bool CondCheck (u32 opcode);
@@ -104,6 +107,7 @@ private:
 	/* Parse functions */
 	void Parse(void);
 	void ParseThumb(void);
+	void ParseSvc(u8 num);
 
 public:
 	ARM(void);

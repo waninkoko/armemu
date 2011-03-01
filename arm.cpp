@@ -22,7 +22,6 @@
 #include <fstream>
 #include <cstdio>
 #include <cstring>
-#include <cstdlib>
 #include <elf.h>
 
 #include "arm.hpp"
@@ -386,6 +385,8 @@ void ARM::Parse(void)
 		u32 Imm = opcode & 0xFFFFFF;
 
 		printf("swi 0x%X\n", Imm);
+		ParseSvc(Imm & 0xFF);
+
 		return;
 	}
 
@@ -1783,6 +1784,42 @@ void ARM::ParseThumb(void)
 	printf("Unknown opcode! (0x%04X)\n", opcode);
 }
 
+void ARM::ParseSvc(u8 num)
+{
+	u32 *ret = r + 0;
+
+	/* Parse syscall */
+	switch (num) {
+	case 0: {		// exit
+		/* Set finish flag */
+		finished = true;
+		break;
+	}
+
+	case 4: {		// write
+		u32 fd   = r[0];
+		u32 addr = r[1];
+		u32 len  = r[2];
+
+		/* No output descriptor */
+		if (fd < 1 || fd > 2)
+			break;
+
+		/* Print string */
+		for (u32 i = 0; i < len; i++)
+			cout << Memory::Read8(addr + i);
+
+		/* Return value */
+		*ret = len;
+
+		break;
+	}
+
+	default:
+		printf("         [S] Unhandled syscall! (%02X)\n", num);
+	}
+}
+
 bool ARM::LoadBinary(const char *filename)
 {
 	char *buffer;
@@ -1903,14 +1940,23 @@ out:
 
 void ARM::Unload(void)
 {
-	/* Clean registers */
+	/* Reset registers */
 	memset(r, 0, sizeof(r));
 	cpsr.value = spsr = 0;
+
+	/* Reset flag */
+	finished = false;
 }
 
 bool ARM::Step(void)
 {
 	bool ret;
+
+	/* Check finish flag */
+	if (finished) {
+		cout << "FINISHED! (return: " << r[0] << ")" << endl;
+		return false;
+	}
 
 	/* Remove thumb bit */
 	*pc &= ~1;
