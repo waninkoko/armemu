@@ -878,22 +878,14 @@ void ARM::Parse(void)
 
 	case 1: {		// LDR/STR
 		u32  addr, value, wb;
-		bool cond;
 
 		printf("%s%s", (L) ? "ldr" : "str", (B) ? "b" : "");
 		CondPrint(opcode);
 		printf(" r%d,", Rd);
 
-		cond = CondCheck(opcode);
-
-		if (L && Rn == 15) {
-			Imm   = opcode & 0xFFF;
+		if (Rn == 15) {
 			value = Memory::Read32(*pc + Imm + sizeof(opcode));
-
-			printf(" =0x%08X\n", value);
-
-			if (cond)
-				r[Rd] = value;
+			printf(" =0x%X\n", value);
 		} else {
 			printf(" [r%d", Rn);
 
@@ -907,31 +899,33 @@ void ARM::Parse(void)
 				printf(", #%s0x%08X", (U) ? "" : "-", value);
 			}
 			printf("]%s\n", (W) ? "!" : "");
-
-			if (!cond)
-				return;
-
-			if (U) wb = r[Rn] + value;
-			else   wb = r[Rn] - value;
-
-			addr = (P) ? wb : r[Rn];
-
-			if (L) {
-				if (B)
-					r[Rd] = Memory::Read8 (addr);
-				else
-					r[Rd] = Memory::Read32(addr);
-			} else {
-				if (B)
-					Memory::Write8 (addr, r[Rd]);
-				else
-					Memory::Write32(addr, r[Rd]);
-			}
-
-			if (W || !P)
-				r[Rn] = wb;
 		}
 
+		if (!CondCheck(opcode))
+			return;
+
+		if (U) wb = r[Rn] + value;
+		else   wb = r[Rn] - value;
+
+		addr = (P) ? wb : r[Rn];
+
+		if (L) {
+			if (B)
+				r[Rd] = Memory::Read8 (addr);
+			else
+				r[Rd] = Memory::Read32(addr);
+		} else {
+			value = r[Rd];
+			if (Rd == 15)
+				value += 8;
+
+			if (B)
+				Memory::Write8 (addr, value);
+			else
+				Memory::Write32(addr, value);
+		}
+
+		if (W || !P) r[Rn] = wb;
 		return;
 	}
 
