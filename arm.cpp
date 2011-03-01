@@ -894,9 +894,11 @@ void ARM::Parse(void)
 		CondPrint(opcode);
 		printf(" r%d,", Rd);
 
+		Imm = opcode & 0xFFF;
+
 		if (L && Rn == 15) {
-			Imm   = (opcode & 0xFFF);
-			value = Memory::Read32(*pc + Imm + sizeof(opcode));
+			addr  = *pc + Imm + sizeof(opcode);
+			value = Memory::Read32(addr);
 
 			if (CondCheck(opcode))
 				r[Rd] = value;
@@ -913,8 +915,8 @@ void ARM::Parse(void)
 			printf(", %sr%d", (U) ? "" : "-", Rm);
 			ShiftPrint(opcode);
 		} else {
-			value = ROR(Imm, amt);
-			printf(", #%s0x%08X", (U) ? "" : "-", value);
+			value = Imm;
+			printf(", #%s0x%X", (U) ? "" : "-", value);
 		}
 		printf("]%s\n", (W) ? "!" : "");
 
